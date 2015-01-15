@@ -3,17 +3,15 @@
  */
 
 var $ = require( "cheerio" ),
-	_ = require("underscore" ),
+	_ = require( "underscore" ),
 	argv = require( "minimist" )( process.argv.slice(2) ),
+	async = require( "async" ),
 	request = require( "request" );
 
-function parseLog(error, response, html) {
+function buildChangesets( buildCallback ) {
 	console.log( "Downloaded. Processing Changesets." );
 
-	var logEntries = $.load( html )( "tr.verbose" ),
-		changesets = [],
-		changesetOutput = "",
-		propsOutput = "";
+	var logEntries = $.load( logHTML )( "tr.verbose" );
 
 	// Each Changeset has two Rows. We Parse them both at once.
 	for (var i = 0; i < logEntries.length; i += 2) {
@@ -34,10 +32,12 @@ function parseLog(error, response, html) {
 			$(this).replaceWith( "`" + $(this).text() + "`" );
 		});
 
-		// Store and strip "Related" or "See" tickets.
+		// Store "Fixes" or "See" tickets.
 		changeset['related'] = [];
+		changeset['component'] = [];
 		$(description).find( "a.ticket" ).each( function() {
-			changeset['related'].push( $(this).text().trim() );
+			var ticket = $(this).text().trim().replace( /#(.*)/, "$1" );
+			changeset['related'].push( ticket );
 		});
 
 		// Create base description
@@ -63,23 +63,89 @@ function parseLog(error, response, html) {
 		changeset['description'] = changeset['description'].replace( /\n\n\n+/g, '\n\n' );
 		changeset['description'] = changeset['description'].trim();
 
-		changesets.push(changeset);
+		changesets.push( changeset );
 	}
+	buildCallback();
+}
 
-	// Reconstitute Log and Collect Props
-	var props = [];
-	for ( var i = 0; i < changesets.length; i++ ) {
-		changesetOutput += "* " +
-			changesets[i]['description'].trim() + " " +
-			changesets[i]['revision'] + " " +
-			changesets[i]['related'].join(', ') + "\n";
+function gatherComponents( gatherCallback ) {
+	var ticketPath = "https://core.trac.wordpress.org/ticket/";
 
-		// Sometimes Committers write their own code.
-		// When this happens, there are no props.
-		if (changesets[i]['props'].length != 0) {
-			props = props.concat(changesets[i]['props']);
+	async.each( changesets, function( changeset, changesetCallback ) {
+		async.each( changeset['related'], function( ticket, relatedCallback ) {
+			request( ticketPath+ticket, function( err, response, body ) {
+				if ( !err && response.statusCode == 200 ) {
+					component = $.load( body )( "#h_component" ).next( "td" ).text().trim();
+					changeset['component'].push(component);
+				}
+				relatedCallback();
+			});
+		}, function( err ) {
+			if ( !err ) {
+				// TODO: Pick best category for this changeset.
+				changesetCallback();
+			} else {
+				console.log( "ERROR:" );
+				console.dir( err );
+			}
+		});
+	},
+	function( err ) {
+		if ( !err ) {
+			gatherCallback();
+			//buildOutput();
+		} else {
+			console.log( "ERROR:" );
+			console.dir( err );
 		}
-	}
+	});
+}
+
+function buildOutput( outputCallback ) {
+	// Reconstitute Log and Collect Props
+	var propsOutput,
+		changesetOutput = "",
+		props = [],
+		categories = {};
+
+	async.map( changesets,
+		function( item ) {
+			category = item['component'];
+
+			if ( ! category ) {
+				category = "Misc";
+			}
+
+			if ( ! categories[category] ) {
+				categories[category] = [];
+			}
+
+			categories[item['component']].push( item );
+		}
+	);
+
+	_.each( categories, function( category ) {
+		changesetOutput += "### " + category[0]['component'] + "\n";
+		_.each( category, function( changeset ) {
+
+			changesetOutput += "* " +
+				changeset['description'].trim() + " " +
+				changeset['revision'] + " " +
+				"#" + changeset['related'].join(', #') + "\n";
+
+			// Make sure Committers get credit
+			props.push( changeset['author'] );
+
+			// Sometimes Committers write their own code.
+			// When this happens, there are no additional props.
+			if ( changeset['props'].length != 0 ) {
+				props = props.concat( changeset['props'] );
+			}
+
+		});
+
+		changesetOutput += "\n";
+	});
 
 	// Collect Props and sort them.
 	props = _.uniq( props.sort( function ( a, b ) {
@@ -89,12 +155,13 @@ function parseLog(error, response, html) {
 	propsOutput = "Thanks to " + "@" + _.without( props, _.last( props ) ).join( ", @" ) +
 		", and @" + _.last( props ) + " for their contributions!";
 
-	// Output our post!
-	console.log( changesetOutput );
-	console.log( propsOutput );
+	// Output!
+	console.log( changesetOutput + "\n\n" + propsOutput );
+	outputCallback();
 }
 
-var logPath,
+var logPath, logHTML,
+	changesets = [],
 	startRevision = argv['start'],
 	stopRevision  = argv['stop'],
 	revisionLimit = argv['limit'];
@@ -111,6 +178,20 @@ if ( revisionLimit == undefined ) {
 
 logPath = "https://core.trac.wordpress.org/log?rev=" + startRevision + "&stop_rev=" + stopRevision + "&limit=" + revisionLimit + "&verbose=on";
 
-console.log( "Downloading " + logPath );
-request(logPath, parseLog);
-
+async.series([
+	function( logCallback ) {
+		console.log( "Downloading " + logPath );
+		request( logPath, function( err, response, html ) {
+			if ( !err && response.statusCode == 200 ) {
+				logHTML = html;
+				logCallback();
+			} else {
+				console.log( "Error Downloading.");
+				return err;
+			}
+		});
+	},
+	async.apply( buildChangesets ),
+	async.apply( gatherComponents ), // Calls buildOutput() on Finish.
+	async.apply( buildOutput )
+]);
