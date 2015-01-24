@@ -76,7 +76,7 @@ function gatherComponents( gatherCallback ) {
 			request( ticketPath+ticket, function( err, response, body ) {
 				if ( !err && response.statusCode == 200 ) {
 					component = $.load( body )( "#h_component" ).next( "td" ).text().trim();
-					changeset['component'].push(component);
+					changeset['component'].push( component );
 				}
 				relatedCallback();
 			});
