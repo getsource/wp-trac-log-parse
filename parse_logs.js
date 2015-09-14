@@ -24,7 +24,7 @@ function buildChangesets( buildCallback ) {
 
 		changeset['revision'] = $( logEntries[i] ).find( "td.rev" ).text().trim().replace( /@(.*)/, "[$1]" );
 		changeset['author']   = $( logEntries[i] ).find( "td.author" ).text().trim();
-		
+
 		description = $( logEntries[i+1] ).find( "td.log" );
 
 		// Re-add `` for code segments.
@@ -165,6 +165,16 @@ var logPath, logHTML,
 	startRevision = argv['start'],
 	stopRevision  = argv['stop'],
 	revisionLimit = argv['limit'];
+
+	// Allow aliasing 'stop' to from' for semantic argumenting.
+	if ( argv['from'] ) {
+		stopRevision = parseInt( argv['from'], 10 );
+	}
+
+	// Allow aliasing 'start' to 'to' for semantic argumenting.
+	if ( argv['to'] ) {
+		startRevision = parseInt( argv['to'], 10 );
+	}
 
 if ( startRevision == undefined || stopRevision == undefined ) {
 	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
