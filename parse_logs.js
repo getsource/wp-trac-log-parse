@@ -175,9 +175,7 @@ var logPath, logHTML,
 	stopRevision = parseInt(args['stop'], 10),
 	revisionLimit = parseInt(args['limit'], 10);
 
-	console.dir(args);
-
-if ( startRevision == undefined || stopRevision == undefined ) {
+if ( isNaN(startRevision) || isNaN(stopRevision) ) {
 	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
 	return;
 }
