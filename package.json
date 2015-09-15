@@ -1,6 +1,6 @@
 {
   "name": "wp-trac-log-parse",
-  "version": "0.1.0-0",
+  "version": "0.1.0",
   "description": "Node.js Parser for WordPress Trac Logs",
   "author": "Mike Schroder <me@getsource.net>",
   "main": "parse_logs.js",
