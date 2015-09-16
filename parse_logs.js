@@ -192,8 +192,8 @@ if (args.changesets) {
 
 
 if ( isNaN(startRevision) || isNaN(stopRevision) ) {
-	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
-	return;
+	console.info( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]" );
+	process.exit();
 }
 
 logPath = util.format("https://core.trac.wordpress.org/log?rev=%d&stop_rev=%d&limit=%d&verbose=on", startRevision, stopRevision, revisionLimit);
