@@ -171,16 +171,15 @@ var logPath, logHTML,
 			'limit': 400
 		}
 	}),
-	startRevision = parseInt(args['start'], 10),
-	stopRevision = parseInt(args['stop'], 10),
-	revisionLimit = parseInt(args['limit'], 10);
+	startRevision = parseInt(args.start, 10),
+	stopRevision = parseInt(args.stop, 10),
+	revisionLimit = parseInt(args.limit, 10);
 
-if (args['changesets']) {
-	var revisions = args['changesets'],
-		regex = /(\d{3,5})[:-](\d{3,5})/g,
-		matches;
+if (args.changesets) {
+	var regex = /(\d{3,5})[:-](\d{3,5})/g,
+	    matches;
 
-	while ((matches = regex.exec(revisions)) !== null) {
+	while ((matches = regex.exec(args.changesets) !== null)) {
 		if (matches.index === regex.lastIndex) {
 			regex.lastIndex++;
 		}
