@@ -175,21 +175,21 @@ var logPath, logHTML,
 	stopRevision = parseInt(args['stop'], 10),
 	revisionLimit = parseInt(args['limit'], 10);
 
-	if (args['changesets']) {
-		var revisions = args['changesets'],
-			regex = /(\d{3,5})[:-](\d{3,5})/g,
-			matches;
+if (args['changesets']) {
+	var revisions = args['changesets'],
+		regex = /(\d{3,5})[:-](\d{3,5})/g,
+		matches;
 
-		while ((matches = regex.exec(revisions)) !== null) {
-			if (matches.index === regex.lastIndex) {
-				regex.lastIndex++;
-			}
-			console.dir(matches);
-
-			startRevision = parseInt(matches[2], 10);
-			stopRevision = parseInt(matches[1], 10);
+	while ((matches = regex.exec(revisions)) !== null) {
+		if (matches.index === regex.lastIndex) {
+			regex.lastIndex++;
 		}
+
+		startRevision = parseInt(matches[2], 10);
+		stopRevision = parseInt(matches[1], 10);
 	}
+}
+
 
 if ( isNaN(startRevision) || isNaN(stopRevision) ) {
 	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
