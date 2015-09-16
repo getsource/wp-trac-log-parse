@@ -7,7 +7,8 @@ var $ = require( "cheerio" ),
 	parseArgs = require( "minimist" ),
 	async = require( "async" ),
 	request = require( "request" ),
-	util = require( "util" );
+	util = require( "util" ),
+	querystring = require("querystring");
 
 function buildChangesets( buildCallback ) {
 	console.log( "Downloaded. Processing Changesets." );
@@ -196,12 +197,18 @@ if ( isNaN(startRevision) || isNaN(stopRevision) ) {
 	process.exit();
 }
 
-logPath = util.format("https://core.trac.wordpress.org/log?rev=%d&stop_rev=%d&limit=%d&verbose=on", startRevision, stopRevision, revisionLimit);
+var logQueryObj = {
+	rev: startRevision,
+	stop_rev: stopRevision,
+	limit: revisionLimit,
+	verbose: 'on'
+},
+logUrl = util.format('https://core.trac.wordpress.org/log?%s', querystring.stringify(logQueryObj));
 
 async.series([
 	function( logCallback ) {
-		console.log( "Downloading " + logPath );
-		request( logPath, function( err, response, html ) {
+		console.log( "Downloading " + logUrl );
+		request( logUrl, function( err, response, html ) {
 			if ( !err && response.statusCode == 200 ) {
 				logHTML = html;
 				logCallback();
