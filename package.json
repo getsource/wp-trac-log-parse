@@ -1,27 +1,22 @@
 {
-	"name": "wp-trac-log-parse",
-	"version": "0.0.1",
-	"description": "Node.js Parser for WordPress Trac Logs",
-	"author": "Mike Schroder <me@getsource.net>",
-
-	"main": "parse_logs.js",
-
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/getsource/wp-trac-log-parse"
-	},
-
-	"bugs": {
-		"url": "https://github.com/getsource/wp-trac-log-parse/issues"
-	},
-
-	"dependencies": {
-		"cheerio": ">=0.18.0",
-		"underscore": ">=1.7.0",
-		"minimist": ">=1.1.0",
-		"request": ">=2.51.0",
-		"async": ">=0.9.0"
-	},
-
-	"license": "MIT"
+  "name": "wp-trac-log-parse",
+  "version": "0.1.0",
+  "description": "Node.js Parser for WordPress Trac Logs",
+  "author": "Mike Schroder <me@getsource.net>",
+  "main": "parse_logs.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/getsource/wp-trac-log-parse"
+  },
+  "bugs": {
+    "url": "https://github.com/getsource/wp-trac-log-parse/issues"
+  },
+  "dependencies": {
+    "cheerio": ">=0.18.0",
+    "underscore": ">=1.7.0",
+    "minimist": ">=1.1.0",
+    "request": ">=2.51.0",
+    "async": ">=0.9.0"
+  },
+  "license": "MIT"
 }
