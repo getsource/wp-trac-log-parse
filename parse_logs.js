@@ -6,7 +6,9 @@ var $ = require( "cheerio" ),
 	_ = require( "underscore" ),
 	parseArgs = require( "minimist" ),
 	async = require( "async" ),
-	request = require( "request" );
+	request = require( "request" ),
+	util = require( "util" ),
+	querystring = require("querystring");
 
 function buildChangesets( buildCallback ) {
 	console.log( "Downloaded. Processing Changesets." );
@@ -171,21 +173,42 @@ var logPath, logHTML,
 			'limit': 400
 		}
 	}),
-	startRevision = parseInt(args['start'], 10),
-	stopRevision = parseInt(args['stop'], 10),
-	revisionLimit = parseInt(args['limit'], 10);
+	startRevision = parseInt(args.start, 10),
+	stopRevision = parseInt(args.stop, 10),
+	revisionLimit = parseInt(args.limit, 10);
 
-if ( isNaN(startRevision) || isNaN(stopRevision) ) {
-	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
-	return;
+if (args.changesets) {
+	var regex = /(\d{3,5})[:-](\d{3,5})/g,
+	    matches;
+
+	while ((matches = regex.exec(args.changesets) !== null)) {
+		if (matches.index === regex.lastIndex) {
+			regex.lastIndex++;
+		}
+
+		startRevision = parseInt(matches[2], 10);
+		stopRevision = parseInt(matches[1], 10);
+	}
 }
 
-logPath = "https://core.trac.wordpress.org/log?rev=" + startRevision + "&stop_rev=" + stopRevision + "&limit=" + revisionLimit + "&verbose=on";
+
+if ( isNaN(startRevision) || isNaN(stopRevision) ) {
+	console.info( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]" );
+	process.exit();
+}
+
+var logQueryObj = {
+	rev: startRevision,
+	stop_rev: stopRevision,
+	limit: revisionLimit,
+	verbose: 'on'
+},
+logUrl = util.format('https://core.trac.wordpress.org/log?%s', querystring.stringify(logQueryObj));
 
 async.series([
 	function( logCallback ) {
-		console.log( "Downloading " + logPath );
-		request( logPath, function( err, response, html ) {
+		console.log( "Downloading " + logUrl );
+		request( logUrl, function( err, response, html ) {
 			if ( !err && response.statusCode == 200 ) {
 				logHTML = html;
 				logCallback();
