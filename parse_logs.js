@@ -177,7 +177,7 @@ var logPath, logHTML,
 
 if ( isNaN(startRevision) || isNaN(stopRevision) ) {
 	console.log( "Usage: node parse_logs.js --start=<start_revision> --stop=<revision_to_stop> [--limit=<total_revisions>]\n" );
-	return;
+	process.exit();
 }
 
 logPath = "https://core.trac.wordpress.org/log?rev=" + startRevision + "&stop_rev=" + stopRevision + "&limit=" + revisionLimit + "&verbose=on";
